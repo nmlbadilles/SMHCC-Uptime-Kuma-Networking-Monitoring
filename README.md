@@ -1,66 +1,140 @@
-# SMHCC Uptime Kuma Network Monitoring
+# SMHCC Uptime Kuma Networking Monitoring 🌐
 
-This repository outlines the network monitoring setup for SMHCC properties using [Uptime Kuma](https://github.com/louislam/uptime-kuma) with Google Sheets as a live dashboard for tracking network device statuses.
+![SMHCC Monitoring Dashboard](media/image6.png)
 
-##SMHCC Network Monitoring Dashboard
+## Overview 🌟
 
-https://docs.google.com/spreadsheets/d/1_P0oMS6h8NoWAyyC8--FHWaPzNFSe1JSX3jLbWmEcSw/edit?usp=sharing
+The **SMHCC Uptime Kuma Networking Monitoring** tool integrates [Uptime Kuma](https://github.com/louislam/uptime-kuma) with Google Spreadsheets to provide real-time network device monitoring across SMHCC properties. This solution uses webhook notifications to log device status updates and displays them on a centralized Google Sheet dashboard 📊. Key features include automated data logging, historical analysis, and timestamp tracking via Google Apps Script, enabling proactive network management 🚀.
 
-## Technology Overview
+## Features ✨
 
-- **Monitoring Tool**: Uptime Kuma
-- **Notifications**: Webhook notifications from Uptime Kuma
-- **Database**: Google Sheets
-- **Dashboard**: The latest network device status is displayed on a Google Sheets dashboard, fed by webhook updates from Uptime Kuma.
+- **Real-Time Monitoring** 🕒: Tracks network device status using Uptime Kuma and displays it on a Google Sheet dashboard.
+- **Webhook Integration** 🔗: Logs are sent from Uptime Kuma to property-specific sheets via webhook POST URLs.
+- **Automated Timestamps** ⏰: Google Apps Script updates timestamps for status changes, ensuring accurate tracking.
+- **Historical Analysis** 📜: Maintains a history of status changes for each monitor in a dedicated "HISTORY" sheet.
+- **Customizable Dashboard** 🎨: Easily configurable for new properties and monitors using predefined formulas.
 
-## Usage Instructions
+## How It Works 🛠️
 
-### Adding a Monitor and Status Cells
-To monitor additional devices, simply add new cells to the designated monitoring area in your Google Sheets file. Use the formula provided below to track the status (Up/Down) of each network device.
+### Centralized Dashboard 📋
+- Operates within a Google Sheet, with a main "DASHBOARD" sheet displaying the latest monitor status 🌈.
+- Status cells pull data from property-specific log sheets, updated in real-time.
 
-#### Formula to Track Monitor Status:
-For each monitor, use the following formula in the relevant cell to display the status as either "✅ Up" or "🔴 Down":
+### Property Log Collection 📑
+- Each SMHCC property has a dedicated log sheet that aggregates logs from a local Uptime Kuma instance.
+- Logs are delivered via webhook notifications, with the **POST URL** serving as the critical link for data transfer 🔄.
 
-```excel
-=IF(ISNUMBER(SEARCH("up", INDEX(FILTER(<HOTELCODE>!C:C, ISNUMBER(SEARCH("<MONITOR NAME>", <HOTELCODE>!C:C))), COUNTA(FILTER(<HOTELCODE>!C:C, ISNUMBER(SEARCH("<MONITOR NAME>",<HOTELCODE>!C:C))))))), "✅ Up", "🔴 Down")
-```
+### Status Tracking ✅
+- The dashboard’s status cells reflect the most recent status from each property’s log sheet, ensuring up-to-date monitoring.
 
-Replace `<HOTELCODE>` with the sheet name for the respective hotel.  
-Replace `<MONITOR NAME>` with the name of the monitor/device you want to track.  
-When adding new rows or columns for new monitors, make sure to shift existing cells up or down accordingly to maintain the correct structure.
+### Automated Timestamp Updates ⏳
+- A Google Apps Script (`updateTimestamps`) tracks status changes and logs timestamps.
+- The script updates both the "DASHBOARD" and "HISTORY" sheets for accurate record-keeping 📅.
 
-### Setting Up Webhooks
-To set up webhook notifications for new devices, follow the instructions in the **GUIDE** sheet within the workbook. The guide provides step-by-step instructions for integrating Uptime Kuma's webhook into the Google Sheets dashboard.
+### Apps Script Functionality 🤖
+- **Purpose**: Automatically updates timestamps when status values change.
+- **Mechanism**:
+  - Operates on two sheets: "DASHBOARD" (main status display) and "HISTORY" (status change tracking).
+  - Uses column pairs to link status columns (e.g., D, J, P) with timestamp columns (e.g., E, K, Q) and history columns.
+  - Compares current and historical values, updating timestamps and history when changes occur.
+  - Initializes headers in the "HISTORY" sheet for values, timestamps, and previous values if not present.
+- **Periodic Execution**: The `checkStatusChanges` function runs `updateTimestamps` on a schedule to ensure continuous monitoring 🕰️.
 
-## Sheet Structure
+## Setup Instructions 🧰
 
-The Google Sheets dashboard is structured as follows:
+### Prerequisites ✅
+- Access to a local Uptime Kuma instance.
+- Google account with access to Google Sheets and Apps Script.
+- Approval from SMHCC IT VP for tool access (restricted to SMHCC Property IT personnel) 🔒.
 
-- **<HOTELCODE> Sheets**: Each hotel property has its own (hidden) sheet, identified by the hotel's code, where the Uptime Kuma logs are stored.
-- **GUIDE Sheet**: Provides detailed instructions on how to add new monitors and configure webhook notifications.
+### Google Sheets Setup 📝
+1. **Access the SNM Tool**:
+   - Submit a request to [helpdesk.pidv@gmail.com](mailto:helpdesk.pidv@gmail.com) for access, subject to SMHCC IT VP approval 🥰.
+2. **Add a Property Dashboard**:
+   - Copy the dashboard from the "TEMPLATE" sheet in the Google Sheet.
+   - Fill in the appropriate cells for the new property.
+   - Update the **Status** column formula:
+     ```excel
+     =IF(ISNUMBER(SEARCH("down", INDEX(FILTER(<PROPERTY_CODE>!C:C, ISNUMBER(SEARCH("<MONITOR_NAME>", <PROPERTY_CODE>!C:C))), COUNTA(FILTER(<PROPERTY_CODE>!C:C, ISNUMBER(SEARCH("<MONITOR_NAME>", <PROPERTY_CODE>!C:C))))))), "🔴 Down", IF(ISNUMBER(SEARCH("up", INDEX(FILTER(<PROPERTY_CODE>!C:C, ISNUMBER(SEARCH("<MONITOR_NAME>", <PROPERTY_CODE>!C:C))), COUNTA(FILTER(<PROPERTY_CODE>!C:C, ISNUMBER(SEARCH("<MONITOR_NAME>", <PROPERTY_CODE>!C:C))))))), "✅ Up", ""))
+     ```
+   - Replace `<PROPERTY_CODE>` with the property’s sheet code (e.g., PIDV, PSH).
+   - Replace `<MONITOR_NAME>` with the Uptime Kuma monitor’s friendly name 🌟.
 
-## How It Works
+### Uptime Kuma Setup 🌍
+1. Request a **POST URL** for the property by emailing [helpdesk.pidv@gmail.com](mailto:helpdesk.pidv@gmail.com).
+2. Access the local Uptime Kuma Web UI.
+3. Navigate to **Settings** > **Notifications** > **Setup Notification**.
+4. Fill in the required fields, including the provided **POST URL**.
+5. Test the webhook setup and save 🥳.
+6. Attach the notification to the desired monitor.
+7. Simulate a status change:
+   - Set a wrong IP address to trigger a "DOWN" notification 😕.
+   - Revert to the correct IP to trigger an "UP" notification 😊.
+   - Save changes to confirm notifications are logged in the property’s sheet.
 
-1. **Uptime Kuma** monitors the network devices' status.
-2. When a device goes offline or comes online, a webhook notification is triggered and sent to Google Sheets.
-3. Google Sheets parses the webhook data and updates the corresponding device’s status on the dashboard.
-4. The status is displayed as either "✅ Up" (if the device is online) or "🔴 Down" (if the device is offline).
+### Apps Script Configuration 🖥️
+- The `updateTimestamps` script is pre-configured in the Google Sheet.
+- Ensure the script references the correct column pairs for status and timestamp columns.
+- Set up a time-driven trigger for the `checkStatusChanges` function to run periodically (e.g., every minute) ⏲️.
 
-## Troubleshooting
+## Backup and Restoration 💾
 
-### Common Issues
+### Objective 🎯
+Ensure critical Google Sheets are regularly backed up both onsite (e.g., local drives) and offsite (e.g., cloud storage outside Google Workspace) to protect against accidental deletion, corruption, or service outages 🛡️.
 
-- **Formula Not Returning the Correct Status**: Double-check that the `<MONITOR NAME>` exactly matches the name in Uptime Kuma and ensure that the webhook is properly set up.
-- **Webhook Not Triggering**: Ensure that Uptime Kuma is configured to send webhook notifications and that the Google Sheets webhook URL is correctly entered.
+### Backup Strategy Overview 📋
+| **Type** | **Method** | **Frequency** |
+|----------|------------|---------------|
+| **Onsite Backup** | Download Google Sheet as Excel (.xlsx) or CSV to local storage | Monthly 📅 |
+| **Offsite Backup** | Sync or export Google Sheet to another cloud platform (OneDrive, Dropbox, AWS S3, etc.) | Monthly ☁️ |
 
-## Additional Information
+### Onsite Backup Procedures 🖴
+1. Open the Google Sheet.
+2. Click **File** > **Download** > **Microsoft Excel (.xlsx)** or **CSV**.
+3. Save the file to a local secure folder: `\\10.36.173.31\dvopd\shared drive\IT\Backups\SNMDashboard`.
+4. Use the naming convention: `[MONTH]_[YEAR].xlsx` (e.g., `APRIL_2025.xlsx`).
+5. (Optional) Copy the file to an external hard drive monthly for extra security 💽.
 
-For any additional details or questions, refer to the **GUIDE** sheet within the workbook or reach out to the network administrator for support.
+### Offsite Backup Procedures ☁️
+1. After completing the onsite backup, upload the file to the **Carlson Rezidor OneDrive** cloud platform.
+2. Maintain the same naming format (e.g., `APRIL_2025.xlsx`) for consistency 📦.
 
-## Contribution
+### Backup Retention Policy 📜
+- Keep monthly backups for **12 months**.
+- Delete files older than 1 year unless required for audit or legal purposes 🗑️.
 
-This repository follows SMHCC guidelines. Contributions are welcome, but please ensure that any proposed changes align with the system requirements and overall setup. To propose changes, open an issue or submit a pull request.
+### Restoration Procedures 🔄
+If the Google Sheet is corrupted or lost:
+1. Locate the most recent backup (onsite or offsite).
+2. Open the Excel or CSV file.
+3. Re-upload it to Google Drive.
+4. (Optional) Reformat if necessary to restore the original structure 🌟.
 
-## License
+### Additional Tip 🌈
+- Enable **Version History** in Google Sheets for easy recovery:
+  - Go to **File** > **Version History** > **See Version History** 🕰️.
 
-This project is licensed under the terms of the [MIT License](LICENSE).
+## Troubleshooting 🐞
+
+| **Issue** | **Resolution** |
+|-----------|----------------|
+| Dashboard status does not match Uptime Kuma 😕 | - Verify the property log sheet.<br>- Check the latest monitor status.<br>- Validate the formula (correct `<PROPERTY_CODE>` and `<MONITOR_NAME>`).<br>- Ensure the webhook notification is attached to the monitor. |
+| Cannot add more monitors 🚫 | - Check for restricted cells and unlock them if necessary. |
+| Duration column shows incorrect time ⏱️ | - Reload the sheet.<br>- Confirm the formula references cell C328 (real-time clock).<br>- Verify the hidden timestamp column between "Status" and "Duration" is updated by the script.<br>- Review the Apps Script for correct column mappings. |
+| POST URL connection fails 😢 | - Request a new POST URL via [helpdesk.pidv@gmail.com](mailto:helpdesk.pidv@gmail.com). |
+| Property sheet not visible 🕵️ | - Go to **View** > **Hidden Sheets** > **Show [Property Sheet]**. |
+
+## Contributing 🤝
+
+Contributions are welcome! To contribute:
+1. Fork the repository 🍴.
+2. Create a new branch (`git checkout -b feature/your-feature`).
+3. Commit your changes (`git commit -m "Add your feature"`).
+4. Push to the branch (`git push origin feature/your-feature`).
+5. Open a pull request 🎉.
+
+Please ensure your changes align with SMHCC’s IT policies and are tested thoroughly.
+
+## License 📄
+
+This project
